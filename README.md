@@ -102,3 +102,35 @@ $ curl -XGET http://localhost:3001/api/scraper/job/D2277869965
 ```
 
 
+# Search in ElasticSearch index
+
+```
+curl -XGET "http://localhost:3001/api/search/web/www.amazon.co.uk" -d'
+{
+         "query": {
+            "match_all": {}
+         }
+}' 
+
+{
+  "_shards": {
+    "failed": 0,
+    "successful": 5,
+    "total": 5
+  },
+  "hits": {
+    "hits": [
+      {
+        "_id": "B00AQBWNXA",
+        "_index": "gopherscrap",
+        "_score": 1,
+        "_source": {
+        ...
+
+  ...
+
+  ...
+
+```
+
+

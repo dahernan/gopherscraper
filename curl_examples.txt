@@ -101,5 +101,12 @@ $ curl -XGET http://localhost:3001/api/scraper/job/D2277869965
 }
 
 
+# Search in the ES index
 
+curl -XGET "http://localhost:3001/api/search/web/www.amazon.co.uk" -d'
+{
+         "query": {
+            "match_all": {}
+         }
+}' 
 
