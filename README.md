@@ -1,6 +1,9 @@
 
-# Scrap an amazon product with a selector
-'''
+# Rest Scrapping 
+
+## Scrap an amazon product with a selector
+
+```
 $ curl -XPOST http://localhost:3001/api/scraper/scrap -d '{
   "url": "http://www.amazon.co.uk/gp/product/B00HZH5ESO",  
   "base": ".a-container",
@@ -23,17 +26,17 @@ $ curl -XPOST http://localhost:3001/api/scraper/scrap -d '{
     "exp": "#priceblock_ourprice"
   }  
 }'
-'''
+```
 
-# Returns the jobId
-'''
+## Returns the jobId
+```
 {
   "jobId": "D2277869965"
 }
-'''
+```
 
-# Gets the Job details
-'''
+## Gets the Job details
+```
 $ curl -XGET http://localhost:3001/api/scraper/job/D2277869965
 {
   "items": [
@@ -58,10 +61,10 @@ $ curl -XGET http://localhost:3001/api/scraper/job/D2277869965
     "url": "http://www.amazon.co.uk/gp/product/B00HZH5ESO"
   }
 }
-'''
+```
 
-# Scrap another amazon product does not need the selector because is saved in Redis
-'''
+## Scrap another amazon product does not need the selector because is saved in Redis
+```
 $ curl -XPOST http://localhost:3001/api/scraper/scrap -d '{
   "url": "http://www.amazon.co.uk/gp/product/B00AQBWNXA"
 }'
@@ -69,9 +72,8 @@ $ curl -XPOST http://localhost:3001/api/scraper/scrap -d '{
 {
   "jobId": "D3686865129"
 }
-'''
-
-'''
+```
+```
 $ curl -XGET http://localhost:3001/api/scraper/job/D2277869965
 
  {
@@ -97,6 +99,6 @@ $ curl -XGET http://localhost:3001/api/scraper/job/D2277869965
     "url": "http://www.amazon.co.uk/gp/product/B00AQBWNXA"
   }
 }
-'''
+```
 
 
