@@ -266,12 +266,15 @@ func (rs RecursiveScrapper) selectorFromRedis(s ScrapSelector) (ScrapSelector, e
 
 	redisData := NewRedisScrapdata()
 
-	stype := SelectorTypeList
 	if s.Stype != "" {
-		stype = s.Stype
+		return redisData.Selector(s.Url, s.Stype)
 	}
 
-	return redisData.Selector(s.Url, stype)
+	rselector, err := redisData.Selector(s.Url, SelectorTypeList)
+	if err == ErrSelectorNotFound {
+		return redisData.Selector(s.Url, SelectorTypeDetail)
+	}
+	return rselector, err
 }
 
 func (rs RecursiveScrapper) recursiveSelector(it ItemResult, selector ScrapSelector) (ScrapSelector, error) {
@@ -405,7 +408,7 @@ func SnippetBase(selector ScrapSelector) (string, error) {
 
 func SanitizeURL(scrapUrl, url string, linkLimit int) string {
 	if url == "" {
-		return url
+		return scrapUrl
 	}
 
 	surl, err := neturl.Parse(scrapUrl)

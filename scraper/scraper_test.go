@@ -326,6 +326,14 @@ func TestSanitizeURL(t *testing.T) {
 			So(result, ShouldEqual, expected)
 		})
 
+		Convey("Return scapped url if url is empty", func() {
+			scrapUrl := "http://www.swag.com/123.html"
+			url := ""
+			expected := scrapUrl
+			result := SanitizeURL(scrapUrl, url, 0)
+			So(result, ShouldEqual, expected)
+		})
+
 		Convey("Convert relative to abosulte", func() {
 			scrapUrl := "http://www.swag.com/is-bin/INTERSHOP.enfinity/WFS/SCO-Web_GB-Site/en_US/-/GBP/SPAG_HLSPage-ProductPaging"
 			url := "/is-bin/intershop.static/WFS/SCO-Media-Site/-/-/publicimages//CG/B2C/PROD/180/5007735W180.jpg"
