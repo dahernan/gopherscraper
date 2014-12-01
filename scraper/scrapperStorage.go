@@ -24,10 +24,10 @@ type ElasticStorage struct {
 	elasticItem *elastic.ItemElastic
 }
 
-func NewElasticStorage() StorageItems {
+func NewElasticStorage(index string) StorageItems {
 	return ElasticStorage{
 		redis:       NewRedisScrapdata(),
-		elasticItem: elastic.NewItemElastic("gopherscrap"),
+		elasticItem: elastic.NewItemElastic(index),
 	}
 }
 
@@ -126,10 +126,10 @@ func NewScrapAndStore(sc ScrapperItems, storages []StorageItems) ScrapAndStoreIt
 	}
 }
 
-func NewElasticScrapAndStore() ScrapAndStoreItems {
+func NewElasticScrapAndStore(index string) ScrapAndStoreItems {
 	return DefaultScrapAndStore{
 		scrapper: NewRecursiveScrapper(),
-		storages: []StorageItems{NewElasticStorage(), NewRedisStorage(), NewFileStorage()},
+		storages: []StorageItems{NewElasticStorage(index), NewRedisStorage(), NewFileStorage()},
 	}
 }
 

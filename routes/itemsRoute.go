@@ -11,8 +11,8 @@ type ItemsRoute struct {
 	es *esearch.ItemElastic
 }
 
-func NewItemsRoute() *ItemsRoute {
-	return &ItemsRoute{esearch.NewItemElastic("gopherscrap")}
+func NewItemsRoute(index string) *ItemsRoute {
+	return &ItemsRoute{esearch.NewItemElastic(index)}
 }
 
 func (r *ItemsRoute) Get(w http.ResponseWriter, req *http.Request, params httprouter.Params) {

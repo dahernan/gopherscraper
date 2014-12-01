@@ -11,14 +11,15 @@ import (
 )
 
 type ScraperRoute struct {
+	index string
 }
 
 type ItemsResponse struct {
 	Items []model.Item `json:"items"`
 }
 
-func NewScraperRoute() *ScraperRoute {
-	return &ScraperRoute{}
+func NewScraperRoute(index string) *ScraperRoute {
+	return &ScraperRoute{index: index}
 }
 
 func (route *ScraperRoute) Selector(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -101,7 +102,7 @@ func (route *ScraperRoute) Scrap(w http.ResponseWriter, r *http.Request, params 
 		return
 	}
 
-	es := scraper.NewElasticScrapAndStore()
+	es := scraper.NewElasticScrapAndStore(route.index)
 	jobId, err := es.ScrapAndStore(selector)
 	if err != nil {
 		HandleHttpErrors(w, err)
@@ -126,6 +127,13 @@ func (route *ScraperRoute) StatusJob(w http.ResponseWriter, r *http.Request, par
 		return
 	}
 
+	Render().JSON(w, http.StatusOK, resp)
+
+}
+
+func (route *ScraperRoute) Log(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	data := scraper.NewRedisScrapdata()
+	resp := data.ScrapLog()
 	Render().JSON(w, http.StatusOK, resp)
 
 }

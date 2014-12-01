@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -27,41 +27,32 @@ func init() {
 
 }
 
-func Render() *render.Render {
-	return rnd
-}
-
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "200 OK!\n")
-}
-
-func NotFound(w http.ResponseWriter, req *http.Request) {
-	errDoc := make(map[string]interface{})
-	errDoc["uri"] = req.RequestURI
-	errDoc["status"] = http.StatusNotFound
-	Render().JSON(w, http.StatusNotFound, errDoc)
-}
-
 func main() {
 	viper.SetDefault("REDIS", "127.0.0.1")
 	viper.SetDefault("ES", "http://coreos1:9200")
 	viper.SetDefault("PORT", ":3001")
+	viper.SetDefault("INDEX", "gopherscrap")
 
 	rhost := viper.GetString("REDIS")
-	redis.UseRedis(rhost)
 	es := viper.GetString("ES")
+	port := viper.GetString("PORT")
+	index := viper.GetString("INDEX")
+
+	log.Println("Using Redis: ", rhost)
+	log.Println("Using ES: ", es)
+	log.Println("Using ES INDEX: ", index)
+	log.Println("Using PORT: ", port)
+
+	redis.UseRedis(rhost)
+
 	elasticRestClient = jsonrequest.NewRequestWithTimeout(es, timeout)
-
-	fmt.Println("Using Redis: ", rhost)
-	fmt.Println("Using ES: ", es)
-
 	elastic.UserHandler(elastic.NewModelHandler(elasticRestClient))
 
 	router := httprouter.New()
 	router.NotFound = NotFound
 
-	itemsRoute := routes.NewItemsRoute()
-	scraperRoute := routes.NewScraperRoute()
+	itemsRoute := routes.NewItemsRoute(index)
+	scraperRoute := routes.NewScraperRoute(index)
 
 	// global items or web items
 	// TODO find a better naming
@@ -74,12 +65,23 @@ func main() {
 	router.POST("/api/scraper/test", scraperRoute.TestURL)
 	router.POST("/api/scraper/scrap", scraperRoute.Scrap)
 	router.POST("/api/scraper/selector", scraperRoute.Selector)
+	router.GET("/api/scraper/log", scraperRoute.Log)
 	router.GET("/api/scraper/job/:id", scraperRoute.StatusJob)
 
 	n := negroni.Classic()
 	n.UseHandler(router)
 
-	port := viper.GetString("PORT")
 	n.Run(port)
 
+}
+
+func Render() *render.Render {
+	return rnd
+}
+
+func NotFound(w http.ResponseWriter, req *http.Request) {
+	errDoc := make(map[string]interface{})
+	errDoc["uri"] = req.RequestURI
+	errDoc["status"] = http.StatusNotFound
+	Render().JSON(w, http.StatusNotFound, errDoc)
 }

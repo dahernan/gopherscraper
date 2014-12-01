@@ -30,7 +30,7 @@ func TestScrapTestWorks(t *testing.T) {
 	// it uses the test Items served in http://localhost:9999/item1.html
 	// from /test
 	Convey("Scraps a single url and returns the json", t, func() {
-		scraperRoute := NewScraperRoute()
+		scraperRoute := NewScraperRoute("testindex")
 
 		s := scraper.ScrapSelector{
 			Url:         "http://localhost:9999/item1.html",
@@ -86,7 +86,7 @@ func TestScrapStoresItemsInES(t *testing.T) {
 	Convey("Scraps a single url stores json in ES", t, func() {
 		elastic.UserHandler(elastic.NewModelHandler(&RequestMock{itemData}))
 
-		scraperRoute := NewScraperRoute()
+		scraperRoute := NewScraperRoute("testindex")
 
 		s := scraper.ScrapSelector{
 			Url:         "http://localhost:9999/item1.html",
