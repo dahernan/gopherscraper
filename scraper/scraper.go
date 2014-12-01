@@ -6,6 +6,7 @@ import (
 	"hash/fnv"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	neturl "net/url"
 	"strconv"
@@ -25,6 +26,14 @@ const (
 	SelectorIdFromLink = "IdFromLink"
 
 	bufferItemsSize = 100 // not sure if is good idea to make it configurable
+)
+
+var (
+	ErrNoBaseSelector  = fmt.Errorf("No Base selector for the scraping")
+	ErrInvalidSelector = fmt.Errorf("InvalidSelector it can not be Recursive for a Detail type")
+
+	defaultHttpClient *http.Client
+	defaultUserAgent  string
 )
 
 // GoQuery Seletor
@@ -71,13 +80,13 @@ type ItemResult struct {
 	Err   error
 }
 
-var (
-	ErrNoBaseSelector  = fmt.Errorf("No Base selector for the scraping")
-	ErrInvalidSelector = fmt.Errorf("InvalidSelector it can not be Recursive for a Detail type")
-)
-
 type ScrapperItems interface {
 	Scrap(selector ScrapSelector) (string, chan ItemResult, error)
+}
+
+func init() {
+	UseHttpClientWithTimeout(5 * time.Second)
+	UseUserAgent("gopherscraper")
 }
 
 type DefaultScrapper struct {
@@ -135,8 +144,43 @@ func closeItemsChannel(jobId string, items chan ItemResult, wg *sync.WaitGroup) 
 	data.FinishJob(jobId)
 }
 
+func UseHttpClient(client *http.Client) {
+	defaultHttpClient = client
+}
+
+func UseHttpClientWithTimeout(timeout time.Duration) {
+	dialTimeout := func(network, addr string) (net.Conn, error) {
+		return net.DialTimeout(network, addr, timeout)
+	}
+
+	transport := http.Transport{
+		Dial: dialTimeout,
+	}
+	client := http.Client{
+		Transport: &transport,
+	}
+
+	defaultHttpClient = &client
+}
+
+func UseUserAgent(ua string) {
+	defaultUserAgent = ua
+}
+
+func httpClient() *http.Client {
+	return defaultHttpClient
+}
+
 func fromUrl(selector ScrapSelector) (*goquery.Document, error) {
-	res, err := http.Get(selector.Url)
+
+	req, err := http.NewRequest("GET", selector.Url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("User-Agent", defaultUserAgent)
+
+	res, err := httpClient().Do(req)
 	if err != nil {
 		return nil, err
 	}

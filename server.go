@@ -14,6 +14,7 @@ import (
 	"github.com/dahernan/gopherscraper/jsonrequest"
 	"github.com/dahernan/gopherscraper/redis"
 	"github.com/dahernan/gopherscraper/routes"
+	"github.com/dahernan/gopherscraper/scraper"
 )
 
 var (
@@ -32,21 +33,26 @@ func main() {
 	viper.SetDefault("ES", "http://coreos1:9200")
 	viper.SetDefault("PORT", ":3001")
 	viper.SetDefault("INDEX", "gopherscrap")
+	viper.SetDefault("USER_AGENT", "gopherscraper")
 
 	rhost := viper.GetString("REDIS")
 	es := viper.GetString("ES")
 	port := viper.GetString("PORT")
 	index := viper.GetString("INDEX")
+	userAgent := viper.GetString("USER_AGENT")
 
 	log.Println("Using Redis: ", rhost)
 	log.Println("Using ES: ", es)
 	log.Println("Using ES INDEX: ", index)
 	log.Println("Using PORT: ", port)
+	log.Println("Using USER_AGENT: ", userAgent)
 
 	redis.UseRedis(rhost)
 
 	elasticRestClient = jsonrequest.NewRequestWithTimeout(es, timeout)
 	elastic.UserHandler(elastic.NewModelHandler(elasticRestClient))
+
+	scraper.UseUserAgent(userAgent)
 
 	router := httprouter.New()
 	router.NotFound = NotFound
