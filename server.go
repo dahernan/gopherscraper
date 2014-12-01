@@ -34,18 +34,21 @@ func main() {
 	viper.SetDefault("PORT", ":3001")
 	viper.SetDefault("INDEX", "gopherscrap")
 	viper.SetDefault("USER_AGENT", "gopherscraper")
+	viper.SetDefault("MAX_CONNECTIONS", 500)
 
 	rhost := viper.GetString("REDIS")
 	es := viper.GetString("ES")
 	port := viper.GetString("PORT")
 	index := viper.GetString("INDEX")
 	userAgent := viper.GetString("USER_AGENT")
+	maxConnections := viper.GetInt("MAX_CONNECTIONS")
 
 	log.Println("Using Redis: ", rhost)
 	log.Println("Using ES: ", es)
 	log.Println("Using ES INDEX: ", index)
 	log.Println("Using PORT: ", port)
 	log.Println("Using USER_AGENT: ", userAgent)
+	log.Println("Using MAX_CONNECTIONS: ", maxConnections)
 
 	redis.UseRedis(rhost)
 
@@ -53,6 +56,7 @@ func main() {
 	elastic.UserHandler(elastic.NewModelHandler(elasticRestClient))
 
 	scraper.UseUserAgent(userAgent)
+	scraper.UseMaxConnections(maxConnections)
 
 	router := httprouter.New()
 	router.NotFound = NotFound

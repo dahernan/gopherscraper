@@ -34,7 +34,17 @@ var (
 
 	defaultHttpClient *http.Client
 	defaultUserAgent  string
+
+	// limit the number of concurrent connections
+	semaphoreMaxConnections chan struct{}
 )
+
+func init() {
+	// default config
+	UseHttpClientWithTimeout(5 * time.Second)
+	UseUserAgent("gopherscraper")
+	UseMaxConnections(1000)
+}
 
 // GoQuery Seletor
 type ScrapSelector struct {
@@ -82,11 +92,6 @@ type ItemResult struct {
 
 type ScrapperItems interface {
 	Scrap(selector ScrapSelector) (string, chan ItemResult, error)
-}
-
-func init() {
-	UseHttpClientWithTimeout(5 * time.Second)
-	UseUserAgent("gopherscraper")
 }
 
 type DefaultScrapper struct {
@@ -172,6 +177,8 @@ func httpClient() *http.Client {
 }
 
 func fromUrl(selector ScrapSelector) (*goquery.Document, error) {
+	lockLimitConnections()
+	defer unlockLimitConnections()
 
 	req, err := http.NewRequest("GET", selector.Url, nil)
 	if err != nil {
@@ -185,6 +192,18 @@ func fromUrl(selector ScrapSelector) (*goquery.Document, error) {
 		return nil, err
 	}
 	return goquery.NewDocumentFromResponse(res)
+}
+
+// acts as a lock to limit the number of concurrent connections
+func lockLimitConnections() {
+	semaphoreMaxConnections <- struct{}{}
+}
+func unlockLimitConnections() {
+	<-semaphoreMaxConnections
+}
+
+func UseMaxConnections(max int) {
+	semaphoreMaxConnections = make(chan struct{}, max)
 }
 
 func validateSelector(selector ScrapSelector) error {
