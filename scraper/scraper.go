@@ -23,6 +23,8 @@ const (
 	SelectorIdFromUrl  = "IdFromUrl"
 	SelectorIdFromCSS  = "IdFromCSS"
 	SelectorIdFromLink = "IdFromLink"
+
+	bufferItemsSize = 100 // not sure if is good idea to make it configurable
 )
 
 // GoQuery Seletor
@@ -92,7 +94,7 @@ func (d DefaultScrapper) Scrap(selector ScrapSelector) (string, chan ItemResult,
 		return "", nil, err
 	}
 
-	items := make(chan ItemResult, 100)
+	items := make(chan ItemResult, bufferItemsSize)
 
 	jobId := "D" + GenerateStringKey(selector)
 	log.Printf("INFO: Scrap [%s] started\n", jobId)
@@ -211,7 +213,7 @@ func (rs RecursiveScrapper) Scrap(selector ScrapSelector) (string, chan ItemResu
 		return baseJobId, itemsIn, err
 	}
 
-	itemsOut := make(chan ItemResult, 100)
+	itemsOut := make(chan ItemResult, bufferItemsSize)
 
 	recJobId := "R" + GenerateStringKey(selector)
 	log.Printf("INFO: Scrap [%v] Recursive started\n", recJobId)
@@ -320,7 +322,7 @@ func (s FromReaderScrapper) Scrap(selector ScrapSelector) (string, chan ItemResu
 	jobId := "READER" + GenerateStringKey(selector)
 	log.Printf("INFO: Scrap [%v] from Reader started\n", jobId)
 
-	items := make(chan ItemResult, 100)
+	items := make(chan ItemResult, bufferItemsSize)
 	wg.Add(1)
 
 	go func() {
