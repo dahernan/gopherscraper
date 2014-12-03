@@ -90,6 +90,8 @@ type ItemResult struct {
 	Err   error
 }
 
+// Scrap a website looking for items based on the CSS selector
+// and returns the jobId, a channel with the Items scrapperd, or an error
 type ScrapperItems interface {
 	Scrap(selector ScrapSelector) (string, chan ItemResult, error)
 }
@@ -101,6 +103,8 @@ func NewScrapper() ScrapperItems {
 	return DefaultScrapper{}
 }
 
+// DefaultScrapper Scraps a Web looking for items, if the selector has multiple pages
+// it does the scrap in all the pages concurrently
 func (d DefaultScrapper) Scrap(selector ScrapSelector) (string, chan ItemResult, error) {
 	wg := &sync.WaitGroup{}
 	err := validateSelector(selector)
@@ -149,10 +153,12 @@ func closeItemsChannel(jobId string, items chan ItemResult, wg *sync.WaitGroup) 
 	data.FinishJob(jobId)
 }
 
+// You can use a custom http.Client calling this function before doing any scrapping
 func UseHttpClient(client *http.Client) {
 	defaultHttpClient = client
 }
 
+// You can set the timeout for the standard http.Client before doing any scrapping
 func UseHttpClientWithTimeout(timeout time.Duration) {
 	dialTimeout := func(network, addr string) (net.Conn, error) {
 		return net.DialTimeout(network, addr, timeout)
@@ -168,6 +174,7 @@ func UseHttpClientWithTimeout(timeout time.Duration) {
 	defaultHttpClient = &client
 }
 
+// set a custom Agent for the scraper
 func UseUserAgent(ua string) {
 	defaultUserAgent = ua
 }
@@ -202,6 +209,7 @@ func unlockLimitConnections() {
 	<-semaphoreMaxConnections
 }
 
+// limit the number of maximun http conections used
 func UseMaxConnections(max int) {
 	semaphoreMaxConnections = make(chan struct{}, max)
 }
@@ -242,8 +250,6 @@ func paginatedUrlSelector(selector ScrapSelector) []ScrapSelector {
 
 }
 
-// Recursive Scrapper to dig into details pages :)
-
 func NewRecursiveScrapper() ScrapperItems {
 	return RecursiveScrapper{
 		baseScrapper: NewScrapper(),
@@ -254,6 +260,12 @@ type RecursiveScrapper struct {
 	baseScrapper ScrapperItems
 }
 
+// Recursive Scrapper can dig into detail pages, and do a recursive scrap
+// the normal flow is
+// 1) Scrap a List page -> multiple items in that page
+// 2) For each item follow the link
+// 3) Get the detail Selector from Redis related with the item scraped
+// 4) Scrap the detail page
 func (rs RecursiveScrapper) Scrap(selector ScrapSelector) (string, chan ItemResult, error) {
 	wg := &sync.WaitGroup{}
 
